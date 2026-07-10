@@ -1,5 +1,8 @@
 # Redis Token Gate
 
+[![CI](https://github.com/abhijaatx/redis-token-gate/actions/workflows/test.yml/badge.svg)](https://github.com/abhijaatx/redis-token-gate/actions/workflows/test.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
 A compact, production-minded HTTP rate-limiter built with **Go**, **Redis**,
 and **Lua**. It applies a distributed token bucket atomically in Redis and
 returns standard rate-limit headers so any application can make an admission
