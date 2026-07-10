@@ -191,6 +191,20 @@ The service fails closed when Redis cannot answer a decision and returns
 application needs a different outage policy, make that choice explicitly in
 the caller rather than relying on an implicit fallback in the limiter.
 
+### Policy examples
+
+The refill rate is expressed in tokens per second, so common policies can be
+read directly from environment variables:
+
+```text
+10 requests/second       DEFAULT_CAPACITY=10  REFILL_PER_SECOND=10
+30 requests/minute       DEFAULT_CAPACITY=30  REFILL_PER_SECOND=0.5
+100 tokens, max cost 25  DEFAULT_CAPACITY=100 REFILL_PER_SECOND=2 MAX_COST=25
+```
+
+Use a cost greater than one when one operation should consume more budget than
+another; the request is denied until the full weighted cost is available.
+
 ## Run without Docker
 
 Install Go 1.24+ and Redis 7+, start Redis locally, then run:
