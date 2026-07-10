@@ -80,6 +80,19 @@ that only ten are admitted under the default policy. Override
 `REQUEST_COUNT`, `RATE_LIMIT_IDENTITY`, `RATE_LIMITER_URL`, or `API_TOKEN` in
 the environment when needed.
 
+## Request lifecycle
+
+For each decision, the service:
+
+1. Validates the identity and weighted cost at the HTTP boundary.
+2. Hashes the identity before using it as a Redis key.
+3. Runs the token refill and consume operation in one Redis Lua transaction.
+4. Returns an admission decision and the timing headers a caller needs to
+   decide whether to proceed or wait.
+
+Because the mutation is atomic, concurrent service instances cannot spend the
+same token twice during a race.
+
 ## API
 
 `POST /v1/check`
