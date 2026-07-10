@@ -33,6 +33,14 @@ code but does not introduce application-language placeholders.
 See the [architecture overview](docs/architecture.md) for the request path and
 failure behavior.
 
+## Why this service?
+
+Use Redis Token Gate when several application instances need one shared
+admission policy. The service makes a small, fast decision before downstream
+work begins; it does not proxy, queue, or retry application traffic. Keeping
+that boundary explicit makes it safe to place beside an API, worker fleet, or
+edge proxy without coupling the limiter to application business logic.
+
 ## Quick start
 
 Prerequisites: Docker Desktop with Compose v2.
