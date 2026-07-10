@@ -223,6 +223,20 @@ curl -X POST http://localhost:8080/v1/check \
   -d '{"identity":"account-42"}'
 ```
 
+## Development workflow
+
+The fast feedback loop is deliberately dependency-light:
+
+```bash
+gofmt -w ./cmd ./internal
+go vet ./...
+go test -race ./...
+```
+
+Use the Compose Redis service only when exercising the real Lua script or the
+full HTTP stack. The integration test uses database `15` by default so it does
+not mix its buckets with the local demo database.
+
 ## Test and verify
 
 Fast tests and static analysis do not require Redis:
