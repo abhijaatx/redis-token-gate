@@ -179,6 +179,18 @@ responses include a request ID for correlating client and server logs.
 | `REQUEST_TIMEOUT` | `2s` | Per-decision Redis timeout. |
 | `API_TOKEN` | unset | Optional Bearer token for the decision endpoint. |
 
+## Operational behavior
+
+Buckets are namespaced by `KEY_PREFIX` and expire after enough idle time for a
+full refill plus a safety buffer. That bounds inactive-key growth while
+preserving state for active identities. The raw identity is never written to
+Redis; only its SHA-256-derived key suffix is stored.
+
+The service fails closed when Redis cannot answer a decision and returns
+`503`. This avoids accidentally admitting traffic during an outage. If your
+application needs a different outage policy, make that choice explicitly in
+the caller rather than relying on an implicit fallback in the limiter.
+
 ## Run without Docker
 
 Install Go 1.24+ and Redis 7+, start Redis locally, then run:
