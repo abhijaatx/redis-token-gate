@@ -16,6 +16,8 @@ func TestPolicyValidate(t *testing.T) {
 		{"zero capacity", Policy{Capacity: 0, RefillPerSecond: 1, MaxCost: 1}, "capacity"},
 		{"zero rate", Policy{Capacity: 1, RefillPerSecond: 0, MaxCost: 1}, "refill"},
 		{"cost above capacity", Policy{Capacity: 1, RefillPerSecond: 1, MaxCost: 2}, "max cost"},
+		{"capacity loses Lua precision", Policy{Capacity: 1 << 53, RefillPerSecond: 1, MaxCost: 1}, "Lua precision"},
+		{"TTL overflows duration", Policy{Capacity: 1, RefillPerSecond: 1e-20, MaxCost: 1}, "unsupported bucket TTL"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
