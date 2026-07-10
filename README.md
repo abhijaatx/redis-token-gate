@@ -257,6 +257,20 @@ docker compose down
 GitHub Actions runs both suites and builds the container on pushes and pull
 requests.
 
+## Troubleshooting
+
+- **`/readyz` returns `503`:** confirm Redis is healthy with
+  `docker compose ps` and that `REDIS_URL` points at the right host and
+  database.
+- **Every request is `401`:** check that `API_TOKEN` matches the exact Bearer
+  value sent in the `Authorization` header.
+- **Requests are limited sooner than expected:** remember that concurrent
+  callers share one bucket and that a cost greater than one spends multiple
+  tokens.
+- **Integration tests cannot connect locally:** start only the Redis service
+  with `docker compose up -d redis`; the development mapping listens on
+  `127.0.0.1:6379`.
+
 ## Project layout
 
 ```text
