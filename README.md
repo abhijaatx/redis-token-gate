@@ -134,6 +134,20 @@ it never silently changes to fail-open behavior.
 | `GET /readyz` | Redis connectivity probe. |
 | `GET /metrics` | Prometheus-compatible counters. |
 
+### Response semantics
+
+| Status | Meaning | Caller action |
+| --- | --- | --- |
+| `200` | The requested cost was admitted. | Start the protected work. |
+| `400` | The JSON request or policy bounds are invalid. | Fix the request; do not retry unchanged. |
+| `401` | A configured API token is missing or incorrect. | Authenticate before retrying. |
+| `429` | The bucket cannot afford the requested cost yet. | Wait for `Retry-After` seconds. |
+| `503` | Redis could not complete the decision. | Apply the caller's outage policy and retry with backoff. |
+
+Every decision includes `RateLimit-Limit`, `RateLimit-Remaining`, and
+`RateLimit-Reset`. Denials additionally include `Retry-After`; all JSON
+responses include a request ID for correlating client and server logs.
+
 ## Configuration
 
 | Variable | Default | Description |
