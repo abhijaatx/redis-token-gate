@@ -1,0 +1,5 @@
+.git
+.github
+coverage.out
+.env
+redis-token-gate

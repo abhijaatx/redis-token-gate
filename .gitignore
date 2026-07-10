@@ -1,0 +1,5 @@
+.env
+coverage.out
+redis-token-gate
+*.test
+.DS_Store
