@@ -83,6 +83,80 @@ func TestCheckRejectsUnauthorizedRequest(t *testing.T) {
 	}
 }
 
+func TestCheckAcceptsBearerToken(t *testing.T) {
+	fake := &fakeLimiter{decision: limiter.Decision{Allowed: true, Limit: 10, Remaining: 9}}
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/v1/check", bytes.NewBufferString(`{"identity":"account-42"}`))
+	request.Header.Set("Authorization", "Bearer secret")
+	testHandler(fake, "secret").ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusOK || fake.identity != "account-42" || fake.cost != 1 {
+		t.Fatalf("status = %d, identity = %q, cost = %d", recorder.Code, fake.identity, fake.cost)
+	}
+}
+
+func TestCheckRejectsMalformedOrUnknownJSON(t *testing.T) {
+	tests := []struct {
+		name string
+		body string
+	}{
+		{name: "malformed", body: `{"identity":`},
+		{name: "unknown field", body: `{"identity":"account-42","extra":true}`},
+		{name: "trailing value", body: `{"identity":"account-42"}{}`},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			fake := &fakeLimiter{}
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest(http.MethodPost, "/v1/check", bytes.NewBufferString(test.body))
+			testHandler(fake, "").ServeHTTP(recorder, request)
+			if recorder.Code != http.StatusBadRequest {
+				t.Fatalf("status = %d, want 400", recorder.Code)
+			}
+			if fake.identity != "" {
+				t.Fatalf("limiter should not run for invalid JSON, got identity %q", fake.identity)
+			}
+		})
+	}
+}
+
+func TestCheckRejectsInvalidInput(t *testing.T) {
+	tests := []string{
+		`{"identity":""}`,
+		`{"identity":"account-42","cost":0,"extra":true}`,
+		`{"identity":"account-42","cost":6}`,
+	}
+	for _, body := range tests {
+		t.Run(body, func(t *testing.T) {
+			fake := &fakeLimiter{}
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest(http.MethodPost, "/v1/check", bytes.NewBufferString(body))
+			testHandler(fake, "").ServeHTTP(recorder, request)
+			if recorder.Code != http.StatusBadRequest {
+				t.Fatalf("status = %d, want 400", recorder.Code)
+			}
+			if fake.identity != "" {
+				t.Fatalf("limiter should not run for invalid input, got identity %q", fake.identity)
+			}
+		})
+	}
+}
+
+func TestHealthAndMetricsExposeProbeResponses(t *testing.T) {
+	fake := &fakeLimiter{}
+	handler := testHandler(fake, "")
+	for _, path := range []string{"/healthz", "/metrics"} {
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, path, nil)
+		handler.ServeHTTP(recorder, request)
+		if recorder.Code != http.StatusOK {
+			t.Fatalf("%s status = %d, want 200", path, recorder.Code)
+		}
+		if recorder.Header().Get("X-Request-ID") == "" {
+			t.Fatalf("%s did not include request ID", path)
+		}
+	}
+}
+
 func TestCheckReturnsServiceUnavailableForLimiterFailure(t *testing.T) {
 	fake := &fakeLimiter{err: errors.New("Redis timeout")}
 	recorder := httptest.NewRecorder()
