@@ -284,6 +284,14 @@ examples/load-demo.mjs      concurrent client demonstration
 docs/architecture.md        system and failure-mode design
 ```
 
+## Contributing
+
+Keep policy changes covered at both layers: unit tests should protect the Go
+contract, while integration tests should prove the Redis/Lua behavior under
+concurrency. Before opening a change, run `gofmt`, `go vet`, and
+`go test -race ./...`; changes that touch the script should also run the
+integration command above.
+
 ## License
 
 Licensed under the [Apache License 2.0](LICENSE).
