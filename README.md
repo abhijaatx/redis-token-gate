@@ -127,6 +127,24 @@ If `API_TOKEN` is configured, add `Authorization: Bearer <token>` to decision
 requests. The service deliberately returns `503` when Redis is unavailable so
 it never silently changes to fail-open behavior.
 
+### Authentication example
+
+Set the token in the service environment and send it only over a trusted,
+encrypted connection in production:
+
+```bash
+API_TOKEN='change-me' docker compose up --build
+curl -i http://localhost:8080/v1/check \
+  --request POST \
+  --header 'Authorization: Bearer change-me' \
+  --header 'Content-Type: application/json' \
+  --data '{"identity":"account-42"}'
+```
+
+The token comparison is constant-time. Health, readiness, and metrics remain
+unauthenticated so orchestrator probes can reach them; protect those routes at
+the network boundary when they should not be publicly visible.
+
 | Endpoint | Purpose |
 | --- | --- |
 | `POST /v1/check` | Consume tokens and return an admission decision. |
